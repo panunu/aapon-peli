@@ -6,10 +6,16 @@ var ships = [];
 
 Crafty.init(mapWidth, mapHeight).background('#bbddff');
 
+Crafty.e('2D, Mouse')
+    .attr({x: 0, y: 0, w: 1325, h: 700})
+    .bind('Click', function (event) {
+        createTurret(event.realX, event.realY);
+    });
+
 Crafty.c('Turret', {
     aim: function (targetShipIndex) {
         if (ships.length == 0) {
-            this.timeout(this.aim, 1000);
+            return this.timeout(this.aim, 1000);
         }
 
         var targetIndex = targetShipIndex ? targetShipIndex : parseInt(Math.random() * ships.length);
@@ -21,10 +27,10 @@ Crafty.c('Turret', {
 
             this.rotation += (this.rotation < Math.atan2(a, b) * 180 / Math.PI) ? 1 : -1;
 
-            this.timeout(this.aim.bind(this, targetIndex), 5);
-        } else {
-            this.timeout(this.aim, 5);
+            return this.timeout(this.aim.bind(this, targetIndex), 10);
         }
+
+        this.timeout(this.aim, 10);
     },
 
     shoot: function () {
@@ -32,7 +38,19 @@ Crafty.c('Turret', {
             createAmmunition(
                 this.x,
                 this.y,
-                this.rotation
+                this.rotation + parseInt(Math.random() * (10 - this.accuracy)) * (parseInt(Math.random() * 10) <= 5 ? 1 : -1)
+            );
+
+            createAmmunition(
+                this.x,
+                this.y,
+                this.rotation + parseInt(Math.random() * (10 - this.accuracy)) * (parseInt(Math.random() * 10) <= 5 ? 1 : -1)
+            );
+
+            createAmmunition(
+                this.x,
+                this.y,
+                this.rotation + parseInt(Math.random() * (10 - this.accuracy)) * (parseInt(Math.random() * 10) <= 5 ? 1 : -1)
             );
 
             this.timeout(this.shoot, 2000);
@@ -52,7 +70,7 @@ Crafty.c('Ammunition', {
         }
 
         var speed = 3;
-        this.rotation++;
+        this.rotation += Math.random() * 2;
 
         this.y -= Math.cos(rotationInRadians) * speed;
         this.x += Math.sin(rotationInRadians) * speed;
@@ -68,7 +86,7 @@ Crafty.c('Ammunition', {
 Crafty.c('Ship', {
     nextMove: function (waypoints, sequence) {
         var speed = 0.1;
-        var approximity = 5;
+        var proximity = parseInt(Math.random() * 30);
 
         if (!waypoints[sequence]) {
             sequence = 0;
@@ -86,7 +104,7 @@ Crafty.c('Ship', {
         this.y -= Math.cos(rotationInRadians) * speed;
         this.x += Math.sin(rotationInRadians) * speed;
 
-        if (Math.abs(a) < approximity && Math.abs(b) < approximity) {
+        if (Math.abs(a) < proximity && Math.abs(b) < proximity) {
             sequence++;
         }
 
@@ -110,33 +128,33 @@ Crafty.c('Ship', {
 
 var waypoints = [
     Crafty.e('2D, Color, Canvas')
-        .attr({x: 500, y: 300, w: 10, h: 10})
+        .attr({x: 500, y: 300, w: 2, h: 2})
         .color('yellow'),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: 1000, y: 50, w: 10, h: 10})
+        .attr({x: 1000, y: 50, w: 2, h: 2})
         .color('orangered'),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: 700, y: 500, w: 10, h: 10})
+        .attr({x: 1300, y: 600, w: 2, h: 2})
         .color('darkblue'),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: 100, y: 250, w: 10, h: 10})
-        .color('skyblue'),
+        .attr({x: 100, y: 250, w: 2, h: 2})
+        .color('red'),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: 1000, y: 50, w: 10, h: 10})
+        .attr({x: 1000, y: 50, w: 2, h: 2})
         .color('orangered'),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: 100, y: 250, w: 10, h: 10})
-        .color('skyblue')
+        .attr({x: 100, y: 250, w: 2, h: 2})
+        .color('darkgreen')
 ];
 
 var createTurret = function (x, y) {
     var turret = Crafty.e('Turret, 2D, Canvas, Color')
-        .attr({x: x, y: y, w: 25, h: 25})
+        .attr({x: x, y: y, w: 25, h: 25, accuracy: 1})
         .origin('center')
         .color('darkgray');
 
@@ -174,13 +192,10 @@ var createShip = function (x, y) {
     return ship;
 };
 
-createShip(100, 100);
 createShip(1000, 500);
 createShip(200, 200);
 createShip(200, 500);
-createShip(1500, 350);
+createShip(1300, 350);
 createShip(20, 500);
-
-createTurret(100, 100);
-createTurret(1000, 400);
-createTurret(500, 600);
+createShip(100, 500);
+createShip(20, 400);
