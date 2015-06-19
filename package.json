@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "craftyjs": "^0.6.3"
+    "craftyjs": "^0.6.3",
+    "uuid": "^2.0.1"
   },
   "devDependencies": {
     "beefy": "^2.1.1"
