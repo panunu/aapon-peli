@@ -7,14 +7,13 @@ var ships = [];
 Crafty.init(mapWidth, mapHeight).background('#bbddff');
 
 Crafty.c('Turret', {
-    aim: function () {
+    aim: function (targetShipIndex) {
         if (ships.length == 0) {
             this.timeout(this.aim, 1000);
         }
 
-        console.log(ships.length);
-
-        var targetShip = ships[0];
+        var targetIndex = targetShipIndex ? targetShipIndex : parseInt(Math.random() * ships.length);
+        var targetShip = ships[targetIndex];
 
         if (targetShip) {
             var a = (targetShip.x - this.x);
@@ -22,18 +21,20 @@ Crafty.c('Turret', {
 
             this.rotation += (this.rotation < Math.atan2(a, b) * 180 / Math.PI) ? 1 : -1;
 
+            this.timeout(this.aim.bind(this, targetIndex), 5);
+        } else {
             this.timeout(this.aim, 5);
         }
     },
 
     shoot: function () {
-        createAmmunition(
-            this.x,
-            this.y,
-            this.rotation
-        );
-
         if (ships.length) {
+            createAmmunition(
+                this.x,
+                this.y,
+                this.rotation
+            );
+
             this.timeout(this.shoot, 2000);
         }
     }
@@ -176,6 +177,9 @@ var createShip = function (x, y) {
 createShip(100, 100);
 createShip(1000, 500);
 createShip(200, 200);
+createShip(200, 500);
+createShip(1500, 350);
+createShip(20, 500);
 
 createTurret(100, 100);
 createTurret(1000, 400);
