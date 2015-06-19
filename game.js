@@ -6,6 +6,9 @@ Crafty.init(mapWidth, mapHeight).background('#bbddff');
 
 Crafty.c('Ship', {
     nextMove: function (waypoints, sequence) {
+        var speed = 2;
+        var approximity = 1;
+
         if (!waypoints[sequence]) {
             sequence = 0;
         }
@@ -14,14 +17,15 @@ Crafty.c('Ship', {
         var a = (waypoint.x - this.x);
         var b = (this.y - waypoint.y);
 
-        (this.rotation < Math.atan2(a, b) * 180 / Math.PI) ? this.rotation++ : this.rotation--;
+        var turnLeftOrRight = (this.rotation < Math.atan2(a, b) * 180 / Math.PI) ? 1 : -1;
+        this.rotation += turnLeftOrRight * speed;
 
         var rotationInRadians = this.rotation * (Math.PI / 180);
 
-        this.y -= Math.cos(rotationInRadians);
-        this.x += Math.sin(rotationInRadians);
+        this.y -= Math.cos(rotationInRadians) * speed;
+        this.x += Math.sin(rotationInRadians) * speed;
 
-        if (Math.abs(a) < 5 && Math.abs(b) < 5) {
+        if (Math.abs(a) < approximity && Math.abs(b) < approximity) {
             sequence++;
         }
 
