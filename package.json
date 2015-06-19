@@ -1,0 +1,17 @@
+{
+  "name": "aapon-en-tieda-peli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "craftyjs": "^0.6.3"
+  },
+  "devDependencies": {
+    "beefy": "^2.1.1"
+  }
+}
