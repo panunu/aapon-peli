@@ -13,7 +13,7 @@ var updateTreasury = function (amount) {
     treasuryHud.text(treasury);
 };
 
-Crafty.init(mapWidth, mapHeight).background('#bbddff');
+Crafty.init(mapWidth, mapHeight).background('#bbddff url(graphics/sea.png)');
 
 var createMenus = function () {
     Crafty.e('2D, Color, Canvas')
@@ -23,7 +23,7 @@ var createMenus = function () {
     var buyTurretButton = Crafty.e('2D, Mouse, Color, Canvas, Image')
         .attr({x: mapWidth - 100, y: 0, w: 100, h: 100})
         .color('white')
-        .image('graphics/turret.png')
+        .image('graphics/turret-small.png')
         .bind('Click', function (event) {
             if (treasury < 100) {
                 return;
@@ -73,7 +73,7 @@ Crafty.c('Turret', {
 
     shoot: function () {
         if (ships.length) {
-            for (var simultaneous = 3; simultaneous > 0; simultaneous--) {
+            for (var simultaneous = this.turrets; simultaneous > 0; simultaneous--) {
                 createAmmunition(
                     this.x,
                     this.y,
@@ -121,7 +121,7 @@ Crafty.c('Ammunition', {
 Crafty.c('Ship', {
     nextMove: function (waypoints, sequence) {
         var speed = this.speed;
-        var proximity = parseInt(Math.random() * 30);
+        var proximity = parseInt(Math.random() * 100);
 
         if (!waypoints[sequence]) {
             sequence = 0;
@@ -131,9 +131,10 @@ Crafty.c('Ship', {
         var a = (waypoint.x - this.x);
         var b = (this.y - waypoint.y);
 
-        var turnLeftOrRight = (this.rotation < Math.atan2(a, b) * 180 / Math.PI) ? 1 : -1;
-        this.rotation += turnLeftOrRight * speed;
+        var targetRotation = Math.atan2(a, b) * 180 / Math.PI;
+        var turnLeftOrRight = (this.rotation < targetRotation) ? 1 : -1;
 
+        this.rotation += turnLeftOrRight * speed * (Math.random());
         var rotationInRadians = this.rotation * (Math.PI / 180);
 
         this.y -= Math.cos(rotationInRadians) * speed;
@@ -143,7 +144,7 @@ Crafty.c('Ship', {
             sequence++;
         }
 
-        this.timeout(this.nextMove.bind(this, waypoints, sequence, 1));
+        this.timeout(this.nextMove.bind(this, waypoints, sequence, 1000));
 
         return this;
     },
@@ -154,7 +155,7 @@ Crafty.c('Ship', {
 
         if (this.health <= 0) {
             ships = ships.filter(function (ship) {
-                return this.id != ship.id;
+                return this.uuid != ship.uuid;
             }.bind(this));
 
             this.destroy();
@@ -169,44 +170,25 @@ var waypoints = [
         .attr({x: 50, y: 100}),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: mapWidth - 200, y: mapHeight / 2}),
+        .attr({x: mapWidth - 250, y: 100, w: 10, h: 10}).color('blue'),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: 200, y: mapHeight / 2})
+        .attr({x: mapWidth - 175, y: mapHeight - 100, w: 10, h: 10})
+        .color('red'),
+
+    Crafty.e('2D, Color, Canvas')
+        .attr({x: 50, y: mapHeight - 100})
+/*
+    Crafty.e('2D, Color, Canvas')
+        .attr({x: 200, y: mapHeight / 2})*/
 ];
 
-var createTurret = function (x, y) {
-    var turret = Crafty.e('Turret, 2D, Canvas, Collision, Image')
-        .attr({x: x, y: y, w: 25, h: 25, accuracy: 1, health: 2})
-        .origin('center')
-        .checkHits('Ship')
-        .image('graphics/turret.png');
-
-    turret.bind('HitOn', function (hitData) { turret.wasHit(hitData); });
-    turret.aim();
-    turret.shoot();
-
-    return turret;
-};
-
-var createAmmunition = function (x, y, rotation) {
-    var ammo = Crafty.e('Ammunition, 2D, Canvas, Color, Collision, Rotate')
-        .attr({x: x + 10, y: y + 10, w: 8, h: 8, rotation: rotation})
-        .color('black')
-        .origin('center')
-        .checkHits('Ship');
-
-    ammo.bind('HitOn', function (hitData) { ammo.wasHit(hitData); });
-    ammo.shoot();
-
-    return ammo;
-};
-
 var createShip = function (x, y) {
-    var ship = Crafty.e('Ship, 2D, Canvas, Color, Rotate, Collision')
-        .attr({x: x, y: y, w: 16, h: 30, rotation: 10, id: uuid(), health: 3, speed: 0.5})
-        .color('#666666')
-        .origin('center')
+    var ship = Crafty.e('Ship, 2D, Canvas, Collision, Image')
+        .attr({x: x, y: y, rotation: 10, uuid: uuid(), health: 3, speed: 0.5})
+        //.color('black')
+        .image('graphics/ship-small.png?' + uuid())
+        .origin('bottom')
         .checkHits('Ammunition', 'Turret')
         .nextMove(waypoints, 0);
 
@@ -217,6 +199,33 @@ var createShip = function (x, y) {
     ships.push(ship);
 
     return ship;
+};
+
+var createTurret = function (x, y) {
+    var turret = Crafty.e('Turret, 2D, Canvas, Collision, Image')
+        .attr({x: x, y: y, w: 25, h: 25, accuracy: 1, health: 2, turrets: 1})
+        .origin('center')
+        .checkHits('Ship')
+        .image('graphics/turret-smaller.png');
+
+    turret.bind('HitOn', function (hitData) { turret.wasHit(hitData); });
+    turret.aim();
+    turret.shoot();
+
+    return turret;
+};
+
+var createAmmunition = function (x, y, rotation) {
+    var ammo = Crafty.e('Ammunition, 2D, Canvas, Collision, Rotate, Image')
+        .attr({x: x + 10, y: y + 10, w: 8, h: 8, rotation: rotation})
+        .origin('center')
+        .checkHits('Ship')
+        .image('graphics/ammo.png');
+
+    ammo.bind('HitOn', function (hitData) { ammo.wasHit(hitData); });
+    ammo.shoot();
+
+    return ammo;
 };
 
 createMenus();
