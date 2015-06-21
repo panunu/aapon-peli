@@ -1,7 +1,7 @@
 var Crafty = require('craftyjs');
 var uuid = require('uuid');
 
-var mapWidth = 1425, mapHeight = 700;
+var mapWidth = 1280, mapHeight = 600;
 var ships = [];
 var turretSelected = false;
 
@@ -56,7 +56,7 @@ Crafty.c('Turret', {
             return this.timeout(this.aim, 1000);
         }
 
-        var targetIndex = targetShipIndex ? targetShipIndex : parseInt(Math.random() * ships.length);
+        var targetIndex = 0;
         var targetShip = ships[targetIndex];
 
         if (targetShip) {
@@ -85,11 +85,7 @@ Crafty.c('Turret', {
     },
 
     wasHit: function (hitData) {
-        this.health -= 1;
-
-        if (this.health <= 0) {
-            this.destroy();
-        }
+        this.destroy();
     }
 });
 
@@ -151,51 +147,43 @@ Crafty.c('Ship', {
 
     wasHit: function (hitData) {
         this.health -= 1;
-        this.speed -= 0.05;
+        this.speed -= 0.025;
 
         if (hitData == 'Solid') {
             this.health = 0;
         }
 
         if (this.health <= 0) {
-            ships = ships.filter(function (ship) {
-                return this.uuid != ship.uuid;
-            }.bind(this));
+            this.kaboom(true);
+        }
+    },
 
-            this.destroy();
+    kaboom: function (grantMoney) {
+        ships = ships.filter(function (ship) {
+            return this.uuid != ship.uuid;
+        }.bind(this));
 
+        this.destroy();
+
+        if (grantMoney) {
             updateTreasury(50);
         }
     }
 });
 
 var waypoints = [
-    Crafty.e('2D, Color, Canvas')
-        .attr({x: 50, y: 100}),
-
-    Crafty.e('2D, Color, Canvas')
-        .attr({x: mapWidth / 2 - 330, y: 100, w: 10, h: 10}).color('blue'),
-
-    Crafty.e('2D, Color, Canvas')
-        .attr({x: mapWidth / 2 - 290, y: mapHeight - 100, w: 10, h: 10})
-        .color('red'),
-
-    Crafty.e('2D, Color, Canvas')
-        .attr({x: mapWidth / 2 - 10, y: mapHeight - 100, w: 10, h: 10})
-        .color('red'),
-
-    Crafty.e('2D, Color, Canvas')
-        .attr({x: mapWidth / 2, y: mapHeight / 2, w: 10, h: 10})
-        .color('red'),
-
-    Crafty.e('2D, Color, Canvas')
-        .attr({x: mapWidth - 100, y: mapHeight / 2, w: 10, h: 10})
-        .color('red')
+    Crafty.e('2D, Color, Canvas').attr({x: 50, y: 50}),
+    Crafty.e('2D, Color, Canvas').attr({x: mapWidth / 2 - 330, y: 50, w: 10, h: 10}),
+    Crafty.e('2D, Color, Canvas').attr({x: mapWidth / 2 - 290, y: mapHeight - 50, w: 10, h: 10}),
+    Crafty.e('2D, Color, Canvas').attr({x: mapWidth / 2 - 10, y: mapHeight - 50, w: 10, h: 10}),
+    Crafty.e('2D, Color, Canvas').attr({x: mapWidth / 2, y: 55, w: 10, h: 10}),
+    Crafty.e('2D, Color, Canvas').attr({x: mapWidth - 330, y: 56, w: 10, h: 10}),
+    Crafty.e('2D, Color, Canvas').attr({x: mapWidth - 300, y: mapHeight, w: 10, h: 10})
 ];
 
 var createShip = function (x, y) {
     var ship = Crafty.e('Ship, 2D, Canvas, Collision, Image')
-        .attr({x: x, y: y, rotation: 10, uuid: uuid(), health: 3, speed: 1.15})
+        .attr({x: x, y: y, rotation: 10, uuid: uuid(), health: 4, speed: 0.2})
         .image('graphics/ship-small.png?' + uuid())
         .origin('bottom')
         .checkHits('Ammunition', 'Turret', 'Solid')
@@ -239,28 +227,35 @@ var createAmmunition = function (x, y, rotation) {
 
 var createBase = function (x, y) {
     var base = Crafty.e('2D, Canvas, Collision, Image, Color, Solid')
-        .attr({x: x - 50, y: y - 50, w: 100, h: 100, health: 5})
+        .attr({x: x - 100, y: y - 50, w: 100, h: 100, health: 5})
         .origin('center')
         .checkHits('Ship')
-        .color('black');
+        .image('graphics/base.png');
 
     base.bind('HitOn', function (hitData) {
         var collidingShips = base.hit('Ship');
         var keys = Object.keys(collidingShips);
 
         for (var key in keys) {
-            collidingShips[key].obj.destroy();
+            collidingShips[key].obj.kaboom();
         }
 
         base.health--;
         base.resetHitChecks();
+
+        if (base.health <= 0) {
+            base.destroy();
+
+            alert('Kaboom!');
+            window.location.href = '/';
+        }
     });
 };
 
-createBase(mapWidth - 300, mapHeight / 2);
+createBase(mapWidth - 320, mapHeight - 200);
 
 createMenus();
 
-for (var y = 1; y < 50; y += 1) {
-    createShip(50, mapHeight - 100 + y * 70);
+for (var y = 1; y < 75; y += 1) {
+    createShip(50, mapHeight - 100 + y * (75 + Math.random() * 15));
 }
