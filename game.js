@@ -166,6 +166,11 @@ Crafty.c('Ship', {
 
         this.destroy();
 
+        if (ships.length == 0) {
+            alert('Jee!');
+            window.location.href = '/';
+        }
+
         if (grantMoney) {
             updateTreasury(50);
         }
