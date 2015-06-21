@@ -16,9 +16,9 @@ var updateTreasury = function (amount) {
 Crafty.init(mapWidth, mapHeight).background('#bbddff url(graphics/sea.png)');
 
 var createMenus = function () {
-    Crafty.e('2D, Color, Canvas')
+    Crafty.e('2D, Color, Canvas, Image')
         .attr({x: mapWidth - 100, y: 0, w: 100, h: mapHeight})
-        .color('grey');
+        .image('graphics/menu.png');
 
     var buyTurretButton = Crafty.e('2D, Mouse, Color, Canvas, Image')
         .attr({x: mapWidth - 100, y: 0, w: 100, h: 100})
@@ -46,7 +46,8 @@ var createMenus = function () {
 
     treasuryHud = Crafty.e('2D, DOM, Text')
         .attr({x: mapWidth - 90, y: mapHeight - 30})
-        .textFont({ size: '20px', weight: 'bold' })
+        .textFont({size: '20px', weight: 'bold'})
+        .textColor('lightgreen')
         .text(treasury);
 };
 
