@@ -5,7 +5,7 @@ var mapWidth = 1280, mapHeight = 600;
 var ships = [];
 var turretSelected = false;
 
-var treasury = 300;
+var treasury = 200;
 var treasuryHud = null;
 
 var updateTreasury = function (amount) {
@@ -66,10 +66,10 @@ Crafty.c('Turret', {
 
             this.rotation += (this.rotation < Math.atan2(a, b) * 180 / Math.PI) ? 1 : -1;
 
-            return this.timeout(this.aim.bind(this, targetIndex), 10);
+            return this.timeout(this.aim.bind(this, targetIndex), 50);
         }
 
-        this.timeout(this.aim, 10);
+        this.timeout(this.aim, 50);
     },
 
     shoot: function () {
@@ -107,7 +107,7 @@ Crafty.c('Ammunition', {
         this.y -= Math.cos(rotationInRadians) * speed;
         this.x += Math.sin(rotationInRadians) * speed;
 
-        this.timeout(this.travel.bind(this, rotationInRadians));
+        this.timeout(this.travel.bind(this, rotationInRadians), 5);
     },
 
     wasHit: function (hitData) {
@@ -141,7 +141,7 @@ Crafty.c('Ship', {
             sequence++;
         }
 
-        this.timeout(this.nextMove.bind(this, waypoints, sequence, 1000));
+        this.timeout(this.nextMove.bind(this, waypoints, sequence, 1000), 10);
 
         return this;
     },
