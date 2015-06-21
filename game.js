@@ -124,7 +124,7 @@ Crafty.c('Ship', {
         var proximity = parseInt(Math.random() * 100);
 
         if (!waypoints[sequence]) {
-            sequence = 0;
+            return;
         }
 
         var waypoint = waypoints[sequence];
@@ -151,7 +151,11 @@ Crafty.c('Ship', {
 
     wasHit: function (hitData) {
         this.health -= 1;
-        this.speed -= 0.1;
+        this.speed -= 0.05;
+
+        if (hitData == 'Solid') {
+            this.health = 0;
+        }
 
         if (this.health <= 0) {
             ships = ships.filter(function (ship) {
@@ -170,26 +174,31 @@ var waypoints = [
         .attr({x: 50, y: 100}),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: mapWidth - 250, y: 100, w: 10, h: 10}).color('blue'),
+        .attr({x: mapWidth / 2 - 330, y: 100, w: 10, h: 10}).color('blue'),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: mapWidth - 175, y: mapHeight - 100, w: 10, h: 10})
+        .attr({x: mapWidth / 2 - 290, y: mapHeight - 100, w: 10, h: 10})
         .color('red'),
 
     Crafty.e('2D, Color, Canvas')
-        .attr({x: 50, y: mapHeight - 100})
-/*
+        .attr({x: mapWidth / 2 - 10, y: mapHeight - 100, w: 10, h: 10})
+        .color('red'),
+
     Crafty.e('2D, Color, Canvas')
-        .attr({x: 200, y: mapHeight / 2})*/
+        .attr({x: mapWidth / 2, y: mapHeight / 2, w: 10, h: 10})
+        .color('red'),
+
+    Crafty.e('2D, Color, Canvas')
+        .attr({x: mapWidth - 100, y: mapHeight / 2, w: 10, h: 10})
+        .color('red')
 ];
 
 var createShip = function (x, y) {
     var ship = Crafty.e('Ship, 2D, Canvas, Collision, Image')
-        .attr({x: x, y: y, rotation: 10, uuid: uuid(), health: 3, speed: 0.5})
-        //.color('black')
+        .attr({x: x, y: y, rotation: 10, uuid: uuid(), health: 3, speed: 1.15})
         .image('graphics/ship-small.png?' + uuid())
         .origin('bottom')
-        .checkHits('Ammunition', 'Turret')
+        .checkHits('Ammunition', 'Turret', 'Solid')
         .nextMove(waypoints, 0);
 
     ship.bind('HitOff', function (hitData) {
@@ -228,8 +237,30 @@ var createAmmunition = function (x, y, rotation) {
     return ammo;
 };
 
+var createBase = function (x, y) {
+    var base = Crafty.e('2D, Canvas, Collision, Image, Color, Solid')
+        .attr({x: x - 50, y: y - 50, w: 100, h: 100, health: 5})
+        .origin('center')
+        .checkHits('Ship')
+        .color('black');
+
+    base.bind('HitOn', function (hitData) {
+        var collidingShips = base.hit('Ship');
+        var keys = Object.keys(collidingShips);
+
+        for (var key in keys) {
+            collidingShips[key].obj.destroy();
+        }
+
+        base.health--;
+        base.resetHitChecks();
+    });
+};
+
+createBase(mapWidth - 300, mapHeight / 2);
+
 createMenus();
 
 for (var y = 1; y < 50; y += 1) {
-    createShip(50, mapHeight - 100 + y * 60);
+    createShip(50, mapHeight - 100 + y * 70);
 }
