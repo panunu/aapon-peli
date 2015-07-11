@@ -54,7 +54,7 @@ Crafty.c('Mine', {
         this.y -= Math.random() * (Math.random() >= 0.5 ? -1 : 1) / 2;
         this.x += Math.random() * (Math.random() >= 0.5 ? -1 : 1) / 2;
 
-        this.timeout(this.float, 100);
+        this.timeout(this.float, 200);
     },
 
     wasHit: function (hitData) {
