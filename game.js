@@ -2,54 +2,12 @@ var Crafty = require('craftyjs');
 var uuid = require('uuid');
 
 var mapWidth = 1280, mapHeight = 600;
-var ships = [];
-var turretSelected = false;
-
-var treasury = 200;
-var treasuryHud = null;
-
-var updateTreasury = function (amount) {
-    treasury += amount;
-    treasuryHud.text(treasury);
-};
-
 Crafty.init(mapWidth, mapHeight).background('#bbddff url(graphics/sea.png)');
 
-var createMenus = function () {
-    Crafty.e('2D, Color, Canvas, Image')
-        .attr({x: mapWidth - 100, y: 0, w: 100, h: mapHeight})
-        .image('graphics/menu.png');
-
-    var buyTurretButton = Crafty.e('2D, Mouse, Color, Canvas, Image')
-        .attr({x: mapWidth - 100, y: 0, w: 100, h: 100})
-        .color('white')
-        .image('graphics/turret-small.png')
-        .bind('Click', function (event) {
-            if (treasury < 100) {
-                return;
-            }
-
-            this.color('lightgreen');
-            turretSelected = true;
-            updateTreasury(-100);
-        });
-
-    Crafty.e('2D, Mouse')
-        .attr({x: 0, y: 0, w: mapWidth - 100, h: mapHeight})
-        .bind('Click', function (event) {
-            if (turretSelected) {
-                createTurret(event.realX, event.realY);
-                turretSelected = false;
-                buyTurretButton.color('white');
-            }
-        });
-
-    treasuryHud = Crafty.e('2D, DOM, Text')
-        .attr({x: mapWidth - 90, y: mapHeight - 30})
-        .textFont({size: '20px', weight: 'bold'})
-        .textColor('lightgreen')
-        .text(treasury);
-};
+var ships = [];
+var itemSelected = null;
+var treasury = 200;
+var treasuryHud = null;
 
 Crafty.c('Turret', {
     aim: function (targetShipIndex) {
@@ -69,7 +27,7 @@ Crafty.c('Turret', {
             return this.timeout(this.aim.bind(this, targetIndex), 50);
         }
 
-        this.timeout(this.aim, 50);
+        this.timeout(this.aim, 100);
     },
 
     shoot: function () {
@@ -86,6 +44,25 @@ Crafty.c('Turret', {
     },
 
     wasHit: function (hitData) {
+        this.destroy();
+    }
+});
+
+Crafty.c('Mine', {
+    float: function () {
+
+        this.y -= Math.random() * (Math.random() >= 0.5 ? -1 : 1) / 2;
+        this.x += Math.random() * (Math.random() >= 0.5 ? -1 : 1) / 2;
+
+        this.timeout(this.float, 100);
+    },
+
+    wasHit: function (hitData) {
+        var directions = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        for (var d in directions) {
+            createAmmunition(this.x, this.y, d * 45);
+        }
+
         this.destroy();
     }
 });
@@ -107,7 +84,7 @@ Crafty.c('Ammunition', {
         this.y -= Math.cos(rotationInRadians) * speed;
         this.x += Math.sin(rotationInRadians) * speed;
 
-        this.timeout(this.travel.bind(this, rotationInRadians), 5);
+        this.timeout(this.travel.bind(this, rotationInRadians), 20);
     },
 
     wasHit: function (hitData) {
@@ -141,14 +118,14 @@ Crafty.c('Ship', {
             sequence++;
         }
 
-        this.timeout(this.nextMove.bind(this, waypoints, sequence, 1000), 10);
+        this.timeout(this.nextMove.bind(this, waypoints, sequence, 1000), 15);
 
         return this;
     },
 
     wasHit: function (hitData) {
         this.health -= 1;
-        this.speed -= 0.025;
+        this.speed -= 0.01;
 
         if (hitData == 'Solid') {
             this.health = 0;
@@ -177,6 +154,71 @@ Crafty.c('Ship', {
     }
 });
 
+var updateTreasury = function (amount) {
+    treasury += amount;
+    treasuryHud.text(treasury);
+};
+
+var createMenus = function () {
+    Crafty.e('2D, Color, Canvas, Image')
+        .attr({x: mapWidth - 100, y: 0, w: 100, h: mapHeight})
+        .image('graphics/menu.png');
+
+    var buyTurretButton = Crafty.e('2D, Mouse, Color, Canvas, Image')
+        .attr({x: mapWidth - 100, y: 0, w: 100, h: 100})
+        .color('white')
+        .image('graphics/buy-turret.png')
+        .bind('Click', function (event) {
+            if (itemSelected || treasury < 100) {
+                return;
+            }
+
+            this.color('lightgreen');
+            itemSelected = 'turret';
+            updateTreasury(-100);
+        });
+
+    var buyMineButton = Crafty.e('2D, Mouse, Color, Canvas, Image')
+        .attr({x: mapWidth - 100, y: 121, w: 100, h: 100})
+        .color('white')
+        .image('graphics/buy-mine.png')
+        .bind('Click', function (event) {
+            if (itemSelected || treasury < 50) {
+                return;
+            }
+
+            this.color('lightgreen');
+            itemSelected = 'mine';
+            updateTreasury(-50);
+        });
+
+    Crafty.e('2D, Mouse')
+        .attr({x: 0, y: 0, w: mapWidth - 100, h: mapHeight})
+        .bind('Click', function (event) {
+            if (!itemSelected) {
+                return;
+            }
+
+            if (itemSelected === 'turret') {
+                createTurret(event.realX, event.realY);
+                buyTurretButton.color('white');
+            }
+
+            if (itemSelected === 'mine') {
+                createMine(event.realX, event.realY);
+                buyMineButton.color('white');
+            }
+
+            itemSelected = null;
+        });
+
+    treasuryHud = Crafty.e('2D, DOM, Text')
+        .attr({x: mapWidth - 90, y: mapHeight - 30})
+        .textFont({size: '20px', weight: 'bold'})
+        .textColor('lightgreen')
+        .text(treasury);
+};
+
 var waypoints = [
     Crafty.e('2D, Color, Canvas').attr({x: 50, y: 50}),
     Crafty.e('2D, Color, Canvas').attr({x: mapWidth / 2 - 330, y: 50, w: 10, h: 10}),
@@ -189,7 +231,7 @@ var waypoints = [
 
 var createShip = function (x, y) {
     var ship = Crafty.e('Ship, 2D, Canvas, Collision, Image')
-        .attr({x: x, y: y, rotation: 10, uuid: uuid(), health: 4, speed: 0.2})
+        .attr({x: x, y: y, rotation: 10, uuid: uuid(), health: 10, speed: 0.2})
         .image('graphics/ship-small.png?' + uuid())
         .origin('bottom')
         .checkHits('Ammunition', 'Turret', 'Solid')
@@ -202,6 +244,19 @@ var createShip = function (x, y) {
     ships.push(ship);
 
     return ship;
+};
+
+var createMine = function (x, y) {
+    var mine = Crafty.e('Mine, 2D, Canvas, Collision, Image')
+        .attr({x: x - 17, y: y - 17, w: 25, h: 25})
+        .origin('center')
+        .checkHits('Ship, Ammunition')
+        .image('graphics/mine.png?' + uuid());
+
+    mine.bind('HitOn', function (hitData) { mine.wasHit(hitData); });
+    mine.float();
+
+    return mine;
 };
 
 var createTurret = function (x, y) {
@@ -223,7 +278,7 @@ var createAmmunition = function (x, y, rotation) {
         .attr({x: x + 10, y: y + 10, w: 8, h: 8, rotation: rotation})
         .origin('center')
         .checkHits('Ship')
-        .image('graphics/ammo.png');
+        .image('graphics/ammo.png?' + uuid());
 
     ammo.bind('HitOn', function (hitData) { ammo.wasHit(hitData); });
     ammo.shoot();
@@ -258,8 +313,9 @@ var createBase = function (x, y) {
     });
 };
 
-createBase(mapWidth - 320, mapHeight - 200);
+// Go!
 
+createBase(mapWidth - 320, mapHeight - 200);
 createMenus();
 
 for (var y = 1; y < 75; y += 1) {
