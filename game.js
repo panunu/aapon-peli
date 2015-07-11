@@ -58,9 +58,9 @@ Crafty.c('Mine', {
     },
 
     wasHit: function (hitData) {
-        var directions = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        var directions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         for (var d in directions) {
-            createAmmunition(this.x, this.y, d * 45);
+            createAmmunition(this.x, this.y, d * 30);
         }
 
         this.destroy();
