@@ -3,6 +3,7 @@ var uuid = require('uuid');
 
 var mapWidth = 1280, mapHeight = 600;
 Crafty.init(mapWidth, mapHeight).background('#bbddff url(graphics/sea.png)');
+document.body.style.transform = 'translateZ(0)';
 
 var ships = [];
 var itemSelected = null;
@@ -12,7 +13,7 @@ var treasuryHud = null;
 Crafty.c('Turret', {
     aim: function (targetShipIndex) {
         if (ships.length == 0) {
-            return this.timeout(this.aim, 1000);
+            return this.timeout(this.aim, 1100);
         }
 
         var targetIndex = 0;
@@ -24,10 +25,10 @@ Crafty.c('Turret', {
 
             this.rotation += (this.rotation < Math.atan2(a, b) * 180 / Math.PI) ? 1 : -1;
 
-            return this.timeout(this.aim.bind(this, targetIndex), 50);
+            return this.timeout(this.aim.bind(this, targetIndex), 100);
         }
 
-        this.timeout(this.aim, 100);
+        this.timeout(this.aim, 200);
     },
 
     shoot: function () {
@@ -39,7 +40,7 @@ Crafty.c('Turret', {
                     this.rotation + parseInt(Math.random() * (10 - this.accuracy)) * (parseInt(Math.random() * 10) <= 5 ? 1 : -1)
                 );
             }
-            this.timeout(this.shoot, 2000);
+            this.timeout(this.shoot, 4000);
         }
     },
 
@@ -50,7 +51,6 @@ Crafty.c('Turret', {
 
 Crafty.c('Mine', {
     float: function () {
-
         this.y -= Math.random() * (Math.random() >= 0.5 ? -1 : 1) / 2;
         this.x += Math.random() * (Math.random() >= 0.5 ? -1 : 1) / 2;
 
@@ -212,7 +212,7 @@ var createMenus = function () {
             itemSelected = null;
         });
 
-    treasuryHud = Crafty.e('2D, DOM, Text')
+    treasuryHud = Crafty.e('2D, Canvas, Text')
         .attr({x: mapWidth - 90, y: mapHeight - 30})
         .textFont({size: '20px', weight: 'bold'})
         .textColor('lightgreen')
@@ -251,7 +251,7 @@ var createMine = function (x, y) {
         .attr({x: x - 17, y: y - 17, w: 25, h: 25})
         .origin('center')
         .checkHits('Ship, Ammunition')
-        .image('graphics/mine.png?' + uuid());
+        .image('graphics/mine.png');
 
     mine.bind('HitOn', function (hitData) { mine.wasHit(hitData); });
     mine.float();
@@ -278,7 +278,7 @@ var createAmmunition = function (x, y, rotation) {
         .attr({x: x + 10, y: y + 10, w: 8, h: 8, rotation: rotation})
         .origin('center')
         .checkHits('Ship')
-        .image('graphics/ammo.png?' + uuid());
+        .image('graphics/ammo.png');
 
     ammo.bind('HitOn', function (hitData) { ammo.wasHit(hitData); });
     ammo.shoot();
@@ -318,6 +318,6 @@ var createBase = function (x, y) {
 createBase(mapWidth - 320, mapHeight - 200);
 createMenus();
 
-for (var y = 1; y < 75; y += 1) {
+for (var y = 1; y < 60; y += 1) {
     createShip(50, mapHeight - 100 + y * (75 + Math.random() * 15));
 }
