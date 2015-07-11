@@ -183,13 +183,13 @@ var createMenus = function () {
         .color('white')
         .image('graphics/buy-mine.png')
         .bind('Click', function (event) {
-            if (itemSelected || treasury < 50) {
+            if (itemSelected || treasury < 25) {
                 return;
             }
 
             this.color('lightgreen');
             itemSelected = 'mine';
-            updateTreasury(-50);
+            updateTreasury(-25);
         });
 
     Crafty.e('2D, Mouse')
